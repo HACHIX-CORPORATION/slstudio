@@ -75,9 +75,9 @@ CameraFactory::NewCamera(int interfaceNum, int camNum,
 #endif
 
 #ifdef WITH_CAMERABASLER
-  interfaceNum -= 1;
-  if (interfaceNum == 0)
-    return std::make_unique<CameraBasler>(camNum, triggerMode);
+//  interfaceNum -= 1;
+//  if (interfaceNum == 0)
+//    return std::make_unique<CameraBasler>(camNum, triggerMode);
 #endif
 
   return nullptr;

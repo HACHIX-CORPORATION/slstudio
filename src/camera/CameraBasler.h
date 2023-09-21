@@ -3,10 +3,10 @@
 
 #include "Camera.h"
 #include <pylon/PylonIncludes.h>
-// Namespace for using pylon objects.
+//// Namespace for using pylon objects.
 using namespace Pylon;
-// Settings for using Basler USB cameras.
-#include <pylon/usb/BaslerUsbInstantCamera.h>
+//// Settings for using Basler USB cameras.
+//#include <pylon/usb/BaslerUsbInstantCamera.h>
 
 using namespace std;
 

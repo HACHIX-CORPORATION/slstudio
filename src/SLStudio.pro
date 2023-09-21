@@ -285,9 +285,9 @@ macx:exists(/usr/local/include/dc1394/dc1394.h) {
 
 # Note: temporary add basler camera
 DEFINES += WITH_CAMERABASLER
-INCLUDEPATH += "/opt/pylon/include"
+INCLUDEPATH += /opt/pylon/include
 LIBS += -L/opt/pylon/lib
-LIBS += -Wl, -E
+#LIBS += -Wl, -E
 LIBS += -lGCBase_gcc_v3_1_Basler_pylon
 LIBS += -lGenApi_gcc_v3_1_Basler_pylon
 LIBS += -lgxapi

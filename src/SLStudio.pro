@@ -34,6 +34,7 @@ HEADERS  += \
         VideoDialog.h \
         VideoWidget.h \
         camera/Camera.h \
+        camera/CameraBasler.h \
         camera/CameraFactory.h \
         codec/CodecFactory.h \
         projector/Projector.h \
@@ -80,6 +81,7 @@ SOURCES += main.cpp \
         TriangulatorWorker.cpp \
         VideoDialog.cpp \
         VideoWidget.cpp \
+        camera/CameraBasler.cpp \
         camera/CameraFactory.cpp \
         codec/CodecFactory.cpp \
         projector/ProjectorFactory.cpp \
@@ -280,6 +282,24 @@ macx:exists(/usr/local/include/dc1394/dc1394.h) {
     DEFINES += WITH_CAMERAIIDC
     LIBS += -ldc1394
 }
+
+# Note: temporary add basler camera
+DEFINES += WITH_CAMERABASLER
+INCLUDEPATH += "/opt/pylon/include"
+LIBS += -L/opt/pylon/lib
+LIBS += -Wl, -E
+LIBS += -lGCBase_gcc_v3_1_Basler_pylon
+LIBS += -lGenApi_gcc_v3_1_Basler_pylon
+LIBS += -lgxapi
+LIBS += -lpylonbase
+LIBS += -lpylonutility
+LIBS += -luxapi
+LIBS += -lpylon_TL_usb
+LIBS += -lMathParser_gcc_v3_1_Basler_pylon
+LIBS += -lNodeMapData_gcc_v3_1_Basler_pylon
+LIBS += -llog4cpp_gcc_v3_1_Basler_pylon
+LIBS += -lLog_gcc_v3_1_Basler_pylon
+LIBS += -lXmlParser_gcc_v3_1_Basler_pylon
 contains(DEFINES, WITH_CAMERAIIDC) {
     HEADERS += camera/CameraIIDC.h
     SOURCES += camera/CameraIIDC.cpp

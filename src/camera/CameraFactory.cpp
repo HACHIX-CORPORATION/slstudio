@@ -13,6 +13,10 @@
 #include "CameraPointGrey.h"
 #endif
 
+#ifdef WITH_CAMERABASLER
+#include "CameraBasler.h"
+#endif
+
 // Global camera enumerator
 std::vector<std::vector<CameraInfo>> CameraFactory::GetInterfaceCameraList() {
   std::vector<std::vector<CameraInfo>> ret;
@@ -32,6 +36,11 @@ std::vector<std::vector<CameraInfo>> CameraFactory::GetInterfaceCameraList() {
 #ifdef WITH_CAMERAPOINTGREY
   std::vector<CameraInfo> ptgreycameras = CameraPointGrey::getCameraList();
   ret.push_back(ptgreycameras);
+#endif
+
+#ifdef WITH_CAMERABASLER
+    std::vector<CameraInfo> baslercameras  = CameraBasler::getCameraList();
+    ret.push_back(baslercameras);
 #endif
 
   return ret;
@@ -63,6 +72,12 @@ CameraFactory::NewCamera(int interfaceNum, int camNum,
   interfaceNum -= 1;
   if (interfaceNum == 0)
     return std::make_unique<CameraPointGrey>(camNum, triggerMode);
+#endif
+
+#ifdef WITH_CAMERABASLER
+  interfaceNum -= 1;
+  if (interfaceNum == 0)
+    return std::make_unique<CameraBasler>(camNum, triggerMode);
 #endif
 
   return nullptr;

@@ -4,3 +4,4 @@ build/
 
 *.user
 build-SLStudio-Desktop-Debug/
+build-SLStudio-Desktop-Release/

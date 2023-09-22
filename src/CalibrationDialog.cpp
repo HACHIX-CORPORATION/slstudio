@@ -16,6 +16,7 @@
 #include "ProjectorFactory.h"
 
 #include "cvtools.h"
+#include<QDebug>
 
 CalibrationDialog::CalibrationDialog(MainWindow *parent)
     : QDialog(parent), ui(new Ui::CalibrationDialog), reviewMode(false),
@@ -150,6 +151,7 @@ void CalibrationDialog::on_snapButton_clicked() {
   }
 
   if (!camera || !projector) {
+    qDebug() << "Either camera or projector not found" << endl;
     return;
   }
 

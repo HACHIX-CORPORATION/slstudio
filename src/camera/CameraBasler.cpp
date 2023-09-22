@@ -1,9 +1,10 @@
 #include "CameraBasler.h"
 #include <cstring>
+#include<QDebug>
 
 vector<CameraInfo> CameraBasler::getCameraList(){
     // NOTE: Because initialized in constructor
-    // PylonInitialize();
+    PylonInitialize();
 
     Pylon::DeviceInfoList_t cameraList;
 
@@ -23,11 +24,11 @@ vector<CameraInfo> CameraBasler::getCameraList(){
 }
 
 CameraBasler::CameraBasler(unsigned int camNum, CameraTriggerMode triggerMode) : Camera(triggerMode) {
-    Pylon::PylonInitialize();
+    PylonInitialize();
 
     cam = new Pylon::CInstantCamera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-
     cam->Open();
+    qDebug() << "Using device " << cam->GetDeviceInfo().GetModelName() << endl;
 
     if (cam_config.empty()) {
         CFeaturePersistence::SaveToString(cam_config, &cam->GetNodeMap());
@@ -56,36 +57,33 @@ void CameraBasler::setCameraSettings(CameraSettings settings){
 
 
 void CameraBasler::startCapture(){
+    PylonInitialize();
     if(capturing){
-        std::cerr << "CameraIDSImaging: already capturing!" << std::endl;
+        std::cerr << "CameraBasler: already capturing!" << std::endl;
         return;
     }
 
-    cam->StartGrabbing(GrabStrategy_OneByOne, GrabLoop_ProvidedByInstantCamera);
+    cam->StartGrabbing(GrabStrategy_OneByOne);
 
     Pylon::CPylonImage pylonFrame;
-
     Pylon::CGrabResultPtr ptrGrabResult;
-
+    cam->ExecuteSoftwareTrigger();
     cam->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
 
     if (ptrGrabResult->GrabSucceeded()){
-    
         frameWidth = ptrGrabResult->GetWidth();
-
         frameHeight = ptrGrabResult->GetHeight();
     }
-
     capturing = true;
 }
 
 void CameraBasler::stopCapture(){
-
     if (cam->IsGrabbing())
         cam->StopGrabbing();
 }
 
 CameraFrame CameraBasler::getFrame(){
+    PylonInitialize();
     CameraFrame frame;
 
     if (!capturing) {
@@ -93,16 +91,14 @@ CameraFrame CameraBasler::getFrame(){
         return frame;
     }
     Pylon::CPylonImage pylonFrame;
-
     Pylon::CGrabResultPtr ptrGrabResult;
 
+    cam->ExecuteSoftwareTrigger();
     cam->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
 
     if (ptrGrabResult->GrabSucceeded()){
         frame.height = ptrGrabResult->GetHeight();
-
         frame.width = ptrGrabResult->GetWidth();
-
         frame.memory = (unsigned char*)ptrGrabResult->GetBuffer();
     }
     return frame;

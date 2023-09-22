@@ -26,9 +26,11 @@ vector<CameraInfo> CameraBasler::getCameraList(){
 CameraBasler::CameraBasler(unsigned int camNum, CameraTriggerMode triggerMode) : Camera(triggerMode) {
     PylonInitialize();
 
-    cam = new Pylon::CInstantCamera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-    cam->Open();
-    qDebug() << "Using device " << cam->GetDeviceInfo().GetModelName() << endl;
+    if (cam != NULL){
+        cam = new Pylon::CInstantCamera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
+        cam->Open();
+        qDebug() << "Using device " << cam->GetDeviceInfo().GetModelName() << endl;
+    }
 
     if (cam_config.empty()) {
         CFeaturePersistence::SaveToString(cam_config, &cam->GetNodeMap());
@@ -133,4 +135,5 @@ CameraBasler::~CameraBasler(){
     // Stop camera transmission
     if(capturing)
         stopCapture();
+    PylonTerminate();
 }

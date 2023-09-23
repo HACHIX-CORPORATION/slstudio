@@ -24,6 +24,7 @@ class CameraBasler : public Camera {
         size_t getFrameSizeBytes();
         size_t getFrameWidth();
         size_t getFrameHeight();
+        bool isOpen() const;
         ~CameraBasler();
     private:
         Pylon::CInstantCamera *cam;

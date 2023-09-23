@@ -26,14 +26,15 @@ vector<CameraInfo> CameraBasler::getCameraList(){
 CameraBasler::CameraBasler(unsigned int camNum, CameraTriggerMode triggerMode) : Camera(triggerMode) {
     PylonInitialize();
 
-    if (cam != NULL){
+    try {
         cam = new Pylon::CInstantCamera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-        cam->Open();
+        if (!isOpen()) {
+            cam->Open();
+        }
         qDebug() << "Using device " << cam->GetDeviceInfo().GetModelName() << endl;
-    }
-
-    if (cam_config.empty()) {
-        CFeaturePersistence::SaveToString(cam_config, &cam->GetNodeMap());
+    } catch (GenICam::GenericException &e) {
+        cam = nullptr;
+        qWarning() << "Camera Error: " << e.GetDescription();
     }
 }
 
@@ -56,7 +57,6 @@ void CameraBasler::setCameraSettings(CameraSettings settings){
 
 //    cam->ExposureTime.SetValue(settings.shutter);
 }
-
 
 void CameraBasler::startCapture(){
     PylonInitialize();
@@ -82,6 +82,9 @@ void CameraBasler::startCapture(){
 void CameraBasler::stopCapture(){
     if (cam->IsGrabbing())
         cam->StopGrabbing();
+    if (isOpen()) {
+        cam->Close();
+    }
 }
 
 CameraFrame CameraBasler::getFrame(){
@@ -104,6 +107,11 @@ CameraFrame CameraBasler::getFrame(){
         frame.memory = (unsigned char*)ptrGrabResult->GetBuffer();
     }
     return frame;
+}
+
+bool CameraBasler::isOpen() const
+{
+    return cam != nullptr && cam->IsOpen();
 }
 
 size_t CameraBasler::getFrameSizeBytes(){
@@ -135,5 +143,11 @@ CameraBasler::~CameraBasler(){
     // Stop camera transmission
     if(capturing)
         stopCapture();
+    if (isOpen()) {
+        cam->Close();
+    }
+    cam->DestroyDevice();
+    delete cam;
+    cam = nullptr;
     PylonTerminate();
 }

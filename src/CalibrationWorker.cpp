@@ -7,11 +7,12 @@
 #include "RBFInterpolator.h"
 #include <QDateTime>
 #include <QSettings>
+#include <QDebug>
 
 #define sc static_cast
 #define dc dynamic_cast
 
-#define DEBUG_OUTPUT false
+#define DEBUG_OUTPUT true
 
 CalibrationWorker::CalibrationWorker(QObject *parent, unsigned int _screenCols,
                                      unsigned int _screenRows)
@@ -110,6 +111,7 @@ bool CalibrationWorker::findPartialCirclesGrid(const cv::Mat &im,
                                                std::vector<cv::Point3f> &Q,
                                                const float circleSpacing) {
 
+  qDebug("In find partial Circles");
   std::vector<cv::KeyPoint> keypoints;
   blobDetector->detect(im, keypoints);
 
@@ -358,8 +360,11 @@ bool CalibrationWorker::calibrate(CalibrationData &cal,
         cv::drawKeypoints(shading[i], keypoints, results[i]);
       }
     } else if (pattern == "checkers") {
+      qDebug() << "In checker calib" << endl;
+      cv::imwrite("frame_decoded.jpg", shading[i]);
       success =
           cv::findChessboardCorners(shading[i], cv::Size(rows, cols), qci);
+      qDebug() << "Finish find corners" << endl;
       for (int h = 0; h < patternSize.height; h++) {
         for (int w = 0; w < patternSize.width; w++) {
           Qi.push_back(cv::Point3f(spacing * w, spacing * h, 0.0));
@@ -368,9 +373,11 @@ bool CalibrationWorker::calibrate(CalibrationData &cal,
 
       cv::drawChessboardCorners(shading[i], cv::Size(rows, cols), qci, success);
     }
+
 #ifdef _DEBUG
     cv::imwrite("shadingColor.png", results[i]);
 #endif
+    cv::imwrite("shadingColor.png", shading[i]);
 
     // Emit chessboard results
     emit newSequenceResult(results[i], activeSeqs[i], success);

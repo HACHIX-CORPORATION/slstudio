@@ -154,22 +154,43 @@ void CalibrationDialog::on_snapButton_clicked() {
     qDebug() << "Either camera or projector not found" << endl;
     return;
   }
-
   ui->snapButton->setEnabled(false);
 
   // Stop live view
   killTimer(liveViewTimer);
 
   std::vector<cv::Mat> frameSeq;
+  projector->displayWhite();
+  liveViewTimer = startTimer(timerInterval);
 
+  // Dry run
   for (unsigned int i = 0; i < encoder->getNPatterns(); i++) {
+      // Project pattern
+      projector->displayPattern(i);
+      QThread::msleep(delay);
 
+      // Effectuate sleep (necessary with some camera implementations)
+      //QApplication::processEvents();
+
+      // Aquire frame
+      CameraFrame frame = camera->getFrame();
+      cv::Mat frameCV(frame.height, frame.width, CV_8U, frame.memory);
+      frameCV = frameCV.clone();
+      //        cv::resize(frameCV, frameCV, cv::Size(0, 0), 0.5, 0,5);
+
+      // Show frame
+      ui->videoWidget->showFrameCV(frameCV);
+      qDebug() << "Dry run frame idx: " << i << endl;
+  }
+
+  // Original run
+  for (unsigned int i = 0; i < encoder->getNPatterns(); i++) {
     // Project pattern
     projector->displayPattern(i);
     QThread::msleep(delay);
 
     // Effectuate sleep (necessary with some camera implementations)
-    QApplication::processEvents();
+    //QApplication::processEvents();
 
     // Aquire frame
     CameraFrame frame = camera->getFrame();
@@ -182,6 +203,7 @@ void CalibrationDialog::on_snapButton_clicked() {
 
     // Save frame
     frameSeq.push_back(frameCV);
+    qDebug() << "Added frame idx: " << i << endl;
   }
 
   // Store frame sequence
@@ -200,13 +222,13 @@ void CalibrationDialog::on_snapButton_clicked() {
   // Display white
   projector->displayWhite();
 
-#if 0
+//if 0
         // Write frame seq to disk
         for(unsigned int i=0; i<frameSeq.size(); i++){
             QString filename = QString("frameSeq_%1.bmp").arg(i, 2, 10, QChar('0'));
             cv::imwrite(filename.toStdString(), frameSeq[i]);
         }
-#endif
+//endif
 
   // Restart live view
   liveViewTimer = startTimer(timerInterval);

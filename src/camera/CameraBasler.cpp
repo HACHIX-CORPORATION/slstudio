@@ -1,6 +1,6 @@
 #include "CameraBasler.h"
 #include <cstring>
-#include<QDebug>
+#include <QDebug>
 
 vector<CameraInfo> CameraBasler::getCameraList(){
     // NOTE: Because initialized in constructor
@@ -51,6 +51,10 @@ CameraSettings CameraBasler::getCameraSettings(){
 }
 
 void CameraBasler::setCameraSettings(CameraSettings settings){
+    if(capturing){
+        std::cerr << "CameraBasler: already capturing!" << std::endl;
+        return;
+    }
     if (cam->IsGrabbing()) cam->StopGrabbing();
 
 //    cam->GainRaw.SetValue(settings.gain);
@@ -99,7 +103,7 @@ CameraFrame CameraBasler::getFrame(){
     Pylon::CGrabResultPtr ptrGrabResult;
 
     cam->ExecuteSoftwareTrigger();
-    cam->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+    cam->RetrieveResult(20, ptrGrabResult, TimeoutHandling_ThrowException);
 
     if (ptrGrabResult->GrabSucceeded()){
         frame.height = ptrGrabResult->GetHeight();

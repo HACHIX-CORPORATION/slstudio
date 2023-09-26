@@ -19,6 +19,7 @@
 
 #include "PointCloudWidget.h"
 #include "ProjectorVirtual.h"
+#include "QDebug"
 
 void ScanWorker::setup() {
 
@@ -129,10 +130,11 @@ void ScanWorker::doWork() {
     bool success = true;
 
     time.restart();
-
+  
     // Acquire patterns
     for (unsigned int i = 0; i < N; i++) {
 
+      qDebug() << "idx" << i << Qt::endl;
       // Project coded pattern
       if (!(dynamic_cast<ProjectorLC4500 *>(projector.get()) &&
             triggerMode == triggerModeHardware)) {
@@ -144,46 +146,49 @@ void ScanWorker::doWork() {
         QThread::msleep(delay);
       }
 
-      CameraFrame frame;
-      frame = camera->getFrame();
+     CameraFrame frame;
+     frame = camera->getFrame();
 
-      if (!frame.memory) {
-        std::cerr << "SLScanWorker: missed frame!" << std::endl;
-        success = false;
-      }
+     if (!frame.memory) {
+       std::cerr << "SLScanWorker: missed frame!" << std::endl;
+       success = false;
+     }
 
-      // If the camera provides a sequence start flag (e.g. from Arduino trigger
-      // circuit or secondary I/O connected to projector sequence trigger)
-      if (frame.flags != 0) {
-        emit logMessage("Synchronizing sequence.");
-        i = 0;
-      }
+     // If the camera provides a sequence start flag (e.g. from Arduino trigger
+     // circuit or secondary I/O connected to projector sequence trigger)
+     if (frame.flags != 0) {
+       emit logMessage("Synchronizing sequence.");
+       i = 0;
+     }
 
       // Create 8 bit OpenCV matrix
-      cv::Mat frameCV(frame.height, frame.width, CV_8U, frame.memory);
-      frameCV = frameCV.clone();
+     cv::Mat frameCV(frame.height, frame.width, CV_8U, frame.memory);
+     frameCV = frameCV.clone();
 
-      if (triggerMode == triggerModeHardware)
-        frameSeq[(i + N - shift) % N] = frameCV;
-      else
-        frameSeq[i] = frameCV;
-    }
+     if (triggerMode == triggerModeHardware){
+       frameSeq[(i + N - shift) % N] = frameCV;
+     }else{
+       frameSeq[i] = frameCV;
+     };
+      QString filename = QString("frameSeq_dry_%1.bmp").arg(i, 2, 10, QChar('0'));
+      cv::imwrite(filename.toStdString(), frameCV);
+   }
 
-    float sequenceTime = time.restart();
-    emit logMessage(QString("Scan worker %1ms").arg(sequenceTime));
+   float sequenceTime = time.restart();
+   emit logMessage(QString("Scan worker %1ms").arg(sequenceTime));
 
-    if (!success) {
-      std::cerr << "SLScanWorker: missed sequence!" << std::endl;
-      continue;
-    }
+   if (!success) {
+     std::cerr << "SLScanWorker: missed sequence!" << std::endl;
+     continue;
+   }
 
     // Write frames to disk if desired
-    if (writeToDisk) {
-      for (unsigned int i = 0; i < frameSeq.size(); i++) {
-        QString filename = QString("frameSeq_%1.bmp").arg(i, 2, 10, QChar('0'));
-        cv::imwrite(filename.toStdString(), frameSeq[i]);
-      }
-    }
+   if (writeToDisk) {
+     for (unsigned int i = 0; i < frameSeq.size(); i++) {
+       QString filename = QString("frameSeq_%1.bmp").arg(i, 2, 10, QChar('0'));
+       cv::imwrite(filename.toStdString(), frameSeq[i]);
+     }
+   }
 
     // Pass frame sequence to decoder
     emit newFrameSeq(frameSeq);

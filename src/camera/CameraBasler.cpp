@@ -24,18 +24,19 @@ vector<CameraInfo> CameraBasler::getCameraList(){
 }
 
 CameraBasler::CameraBasler(unsigned int camNum, CameraTriggerMode triggerMode) : Camera(triggerMode) {
-    PylonInitialize();
+   PylonInitialize();
 
-    try {
-        cam = new Pylon::CInstantCamera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-        if (!isOpen()) {
-            cam->Open();
-        }
-        qDebug() << "Using device " << cam->GetDeviceInfo().GetModelName() << endl;
-    } catch (GenICam::GenericException &e) {
-        cam = nullptr;
-        qWarning() << "Camera Error: " << e.GetDescription();
-    }
+   try {
+       cam = new Pylon::CInstantCamera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
+       cam -> MaxNumBuffer=5;
+       if (!isOpen()) {
+           cam->Open();
+       }
+       qDebug() << "Using device " << cam->GetDeviceInfo().GetModelName() << endl;
+   } catch (GenICam::GenericException &e) {
+       cam = nullptr;
+       qWarning() << "Camera Error: " << e.GetDescription();
+   }
 }
 
 CameraSettings CameraBasler::getCameraSettings(){
@@ -51,36 +52,46 @@ CameraSettings CameraBasler::getCameraSettings(){
 }
 
 void CameraBasler::setCameraSettings(CameraSettings settings){
+    PylonInitialize();
     if(capturing){
         std::cerr << "CameraBasler: already capturing!" << std::endl;
         return;
     }
-    if (cam->IsGrabbing()) cam->StopGrabbing();
+    try {
+        return;
+        //if (cam->IsGrabbing()) cam->StopGrabbing();
+        // Get a camera parameter using generic parameter access.
+//        Pylon::CIntegerParameter ExposureTime( cam->GetNodeMap(), "ExposureTime" );
+//        ExposureTime.SetValue(settings.shutter);
 
+    } catch (GenICam::GenericException &e) {
+        cam = nullptr;
+        qWarning() << "Camera Error: " << e.GetDescription();
+    };
 //    cam->GainRaw.SetValue(settings.gain);
 
 //    cam->ExposureTime.SetValue(settings.shutter);
 }
 
 void CameraBasler::startCapture(){
-    PylonInitialize();
-    if(capturing){
-        std::cerr << "CameraBasler: already capturing!" << std::endl;
-        return;
-    }
+   PylonInitialize();
+   if(capturing){
+       std::cerr << "CameraBasler: already capturing!" << std::endl;
+       return;
+   }
 
-    cam->StartGrabbing(GrabStrategy_OneByOne);
+   cam->StartGrabbing(GrabStrategy_LatestImageOnly);
 
-    Pylon::CPylonImage pylonFrame;
-    Pylon::CGrabResultPtr ptrGrabResult;
-    cam->ExecuteSoftwareTrigger();
-    cam->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+   Pylon::CPylonImage pylonFrame;
+   Pylon::CGrabResultPtr ptrGrabResult;
+   cam->ExecuteSoftwareTrigger();
+   cam->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
 
-    if (ptrGrabResult->GrabSucceeded()){
-        frameWidth = ptrGrabResult->GetWidth();
-        frameHeight = ptrGrabResult->GetHeight();
-    }
-    capturing = true;
+   if (ptrGrabResult->GrabSucceeded()){
+       frameWidth = ptrGrabResult->GetWidth();
+       frameHeight = ptrGrabResult->GetHeight();
+   }
+   capturing = true;
 }
 
 void CameraBasler::stopCapture(){
@@ -92,25 +103,25 @@ void CameraBasler::stopCapture(){
 }
 
 CameraFrame CameraBasler::getFrame(){
-    PylonInitialize();
-    CameraFrame frame;
+   PylonInitialize();
+   CameraFrame frame;
 
-    if (!capturing) {
-        std::cerr << "ERROR: Cannot get frame before capturing." << std::endl;
-        return frame;
-    }
-    Pylon::CPylonImage pylonFrame;
-    Pylon::CGrabResultPtr ptrGrabResult;
+   if (!capturing) {
+       std::cerr << "ERROR: Cannot get frame before capturing." << std::endl;
+       return frame;
+   }
+   Pylon::CPylonImage pylonFrame;
+   Pylon::CGrabResultPtr ptrGrabResult;
 
-    cam->ExecuteSoftwareTrigger();
-    cam->RetrieveResult(20, ptrGrabResult, TimeoutHandling_ThrowException);
+   cam->ExecuteSoftwareTrigger();
+   cam->RetrieveResult(1000, ptrGrabResult, TimeoutHandling_ThrowException);
 
-    if (ptrGrabResult->GrabSucceeded()){
-        frame.height = ptrGrabResult->GetHeight();
-        frame.width = ptrGrabResult->GetWidth();
-        frame.memory = (unsigned char*)ptrGrabResult->GetBuffer();
-    }
-    return frame;
+   if (ptrGrabResult->GrabSucceeded()){
+       frame.height = ptrGrabResult->GetHeight();
+       frame.width = ptrGrabResult->GetWidth();
+       frame.memory = (unsigned char*)ptrGrabResult->GetBuffer();
+   }
+   return frame;
 }
 
 bool CameraBasler::isOpen() const

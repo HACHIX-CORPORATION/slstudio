@@ -85,7 +85,7 @@ void CameraBasler::startCapture(){
    Pylon::CPylonImage pylonFrame;
    Pylon::CGrabResultPtr ptrGrabResult;
    cam->ExecuteSoftwareTrigger();
-   cam->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+   cam->RetrieveResult(500, ptrGrabResult, TimeoutHandling_ThrowException);
 
    if (ptrGrabResult->GrabSucceeded()){
        frameWidth = ptrGrabResult->GetWidth();

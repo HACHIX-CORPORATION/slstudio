@@ -161,7 +161,7 @@ void ScanWorker::doWork() {
        i = 0;
      }
 
-      // Create 8 bit OpenCV matrix
+     // Create 8 bit OpenCV matrix
      cv::Mat frameCV(frame.height, frame.width, CV_8U, frame.memory);
      frameCV = frameCV.clone();
 

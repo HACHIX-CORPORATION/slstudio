@@ -307,7 +307,7 @@ bool CalibrationWorker::calibrate(CalibrationData &cal,
     }
 
     decoder->decodeFrames(up[i], vp[i], mask[i], shading[i]);
-#if 0
+#if 1
             cvtools::writeMat(shading[i], QString("shading[%1].mat").arg(i).toLocal8Bit());
             cvtools::writeMat(up[i], QString("up[%1].mat").arg(i).toLocal8Bit());
             cvtools::writeMat(vp[i], QString("vp[%1].mat").arg(i).toLocal8Bit());

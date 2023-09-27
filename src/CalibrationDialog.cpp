@@ -16,7 +16,7 @@
 #include "ProjectorFactory.h"
 
 #include "cvtools.h"
-#include<QDebug>
+#include <QDebug>
 
 CalibrationDialog::CalibrationDialog(MainWindow *parent)
     : QDialog(parent), ui(new Ui::CalibrationDialog), reviewMode(false),
@@ -193,6 +193,16 @@ void CalibrationDialog::on_snapButton_clicked() {
     //QApplication::processEvents();
 
     // Aquire frame
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
+    camera->getFrame();
     CameraFrame frame = camera->getFrame();
     cv::Mat frameCV(frame.height, frame.width, CV_8U, frame.memory);
     frameCV = frameCV.clone();
@@ -222,13 +232,22 @@ void CalibrationDialog::on_snapButton_clicked() {
   // Display white
   projector->displayWhite();
 
-//if 0
+  //if 0
+        // Create dir for store frame seq
+        QString save_dir= QString(
+                    QCoreApplication::applicationDirPath() + "/calibration/Sequence %1/dummy.bmp").arg(frameSeqs.size());
+        QDir dir = QFileInfo(save_dir).dir();
+        if(!dir.exists()) {
+                qDebug() << dir.path() << endl;
+                dir.mkpath(dir.path());
+        };
+
         // Write frame seq to disk
         for(unsigned int i=0; i<frameSeq.size(); i++){
-            QString filename = QString("frameSeq_%1.bmp").arg(i, 2, 10, QChar('0'));
+            QString filename = QString("%1/frameSeq_%2.bmp").arg(dir.path()).arg(i, 2, 10, QChar('0'));
             cv::imwrite(filename.toStdString(), frameSeq[i]);
-        }
-//endif
+        };
+  //endif
 
   // Restart live view
   liveViewTimer = startTimer(timerInterval);
